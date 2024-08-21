@@ -1,8 +1,8 @@
-# Documentação do Plugin WP API Custom
+# Documentação do Plugin
 
 ## 1. Visão Geral
 
-Este documento descreve a instalação e configuração do plugin **WP API Custom**, criado para gerenciar receitas via API no WordPress.
+Este documento descreve a instalação e configuração do plugin **Recipes API**, criado para gerenciar receitas via API no WordPress.
 
 ### Repositório
 
@@ -69,7 +69,7 @@ https://yoursite.com/api/v1/recipes?site=sitea&categories=1,2&relation=OR&page=1
 ```json
 {
   "query": {
-    "post_type": "recipe",
+    "post_type": "recipes",
     "posts_per_page": -1,
     "meta_query": [],
     "tax_query": []

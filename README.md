@@ -1,3 +1,4 @@
+
 # Recipes API Plugin
 
 **Version:** 1.0.0  
@@ -15,6 +16,7 @@ The **Recipes API** plugin allows adding a custom meta box to the "Recipes" Cust
 - REST API endpoint to list "Recipes" CPT entries filtered based on selected sites and categories.
 - Endpoint protection using WordPress application passwords.
 - Supports filtering by multiple categories with `AND` or `OR` relation.
+- Supports pagination to control the number of results returned.
 
 ## Requirements
 
@@ -30,13 +32,13 @@ The **Recipes API** plugin allows adding a custom meta box to the "Recipes" Cust
 
 ### 1. Managing Available Sites
 
-- In the WordPress admin menu, go to **Manage Sites**.
+- In the WordPress admin menu, go to **API Receitas**.
 - Add, edit, or remove the available sites. These sites are used to select which sites the "Recipes" CPT entries will be available on.
 
 ### 2. Configuring the "Recipes" CPT
 
 - When creating or editing a "Recipes" post, you will see a meta box where you can select the sites where the entry will be available.
-- The sites available in the meta box are those configured in the "Manage Sites" screen.
+- The sites available in the meta box are those configured in the "API Receitas" screen.
 
 ### 3. Consuming the REST API
 
@@ -51,14 +53,16 @@ https://yoursite.com/api/v1/recipes
 - `site`: (optional) Filters the entries based on the selected site.
 - `categories`: (optional) Filters entries by multiple categories. Accepts a comma-separated list of category IDs or slugs.
 - `relation`: (optional) Defines the relation between categories, either `AND` or `OR`. The default is `AND`.
+- `page`: (optional) The page number to return. Defaults to 1.
+- `limit`: (optional) The number of items per page. Defaults to 10.
 
 Usage example:
 
 ```
-https://yoursite.com/api/v1/recipes?site=sitea.com&categories=1,2&relation=OR
+https://yoursite.com/api/v1/recipes?site=sitea.com&categories=1,2&relation=OR&page=2&limit=5
 ```
 
-This example will return all recipes from `sitea.com` that are in either category `1` or `2`.
+This example will return page 2 of the results from `sitea.com` that are in either category `1` or `2`, with 5 items per page.
 
 ### 4. Securing the Endpoint with Application Passwords
 
@@ -76,19 +80,19 @@ curl -X GET https://yoursite.com/api/v1/recipes?site=sitea.com \
 - In the WordPress user profile, you will find the "Application Passwords" section.
 - Create an application password and use it along with the username in the authentication.
 
-## Development
+### 5. Pagination Details
 
-If you want to contribute to the development of this plugin:
+The API supports pagination using the `page` and `limit` parameters.
 
-1. Fork the repository.
-2. Create a new branch for your changes: `git checkout -b my-feature`.
-3. Commit your changes: `git commit -m 'Add my new feature'`.
-4. Push your changes to the repository: `git push origin my-feature`.
-5. Open a Pull Request.
+- `page`: Defines which page to return (defaults to 1).
+- `limit`: Defines the number of items per page (defaults to 10).
 
-## License
+The response includes the following pagination details:
+- `total`: Total number of posts found.
+- `total_pages`: Total number of pages available.
+- `current_page`: The current page number.
+- `limit`: The number of items returned per page.
 
-This plugin is distributed under the GPL-2.0-or-later license. For more information, see the LICENSE file.
 
 ## Author
 
