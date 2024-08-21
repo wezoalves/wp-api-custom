@@ -3,6 +3,7 @@ namespace RecipesAPI\API;
 
 class RecipesApiEndpoint
 {
+    private \WP_REST_Request|null $params = null;
     public function init()
     {
         add_action('rest_api_init', [$this, 'registerApiEndpoints']);
@@ -52,8 +53,10 @@ class RecipesApiEndpoint
 
     public function getRecipes($data)
     {
-        
-        $limitFilter = isset($data['limit']) ? min($data['limit'], 100) : 10;
+
+        $this->params = $data;
+
+        $limitFilter = isset($data['limit']) ? min($data['limit'], 100) : 6;
         $limitFilter = intval($limitFilter);
 
         $page = isset($data['page']) ? absint($data['page']) : 1;
@@ -79,9 +82,12 @@ class RecipesApiEndpoint
             ];
         }
 
-        // Filtros de categorias
+        // Filter categories
         $categories = isset($data['categories']) ? explode(',', sanitize_text_field($data['categories'])) : [];
         $relation = isset($data['relation']) && in_array(strtoupper($data['relation']), ['AND', 'OR']) ? strtoupper($data['relation']) : 'AND';
+
+        // Filter field category -> by term_id or slug
+        $field = isset($data['field']) && in_array(strtolower($data['field']), ['term_id', 'slug']) ? strtolower($data['field']) : 'term_id';
 
         $taxQuery = [];
         if (!empty($categories)) {
@@ -89,7 +95,7 @@ class RecipesApiEndpoint
             'relation' => $relation,
             [
                 'taxonomy' => 'category',
-                'field' => 'term_id', // 'term_id' OR 'slug'
+                'field' => $field,
                 'terms' => $categories,
             ]
             ];
@@ -101,6 +107,8 @@ class RecipesApiEndpoint
             'paged' => $page,
             'meta_query' => $metaQuery,
             'tax_query' => $taxQuery,
+            'orderby' => 'date',
+            'order' => 'DESC',
         );
 
         $responseData['query'] = $args;
@@ -112,19 +120,20 @@ class RecipesApiEndpoint
             while ($query->have_posts()) {
                 $query->the_post();
 
-                $recipie = [
+                $recipe = [
                     'id' => get_the_ID(),
                     'title' => get_the_title(),
                     'resume' => wp_strip_all_tags(get_the_excerpt()),
-                    'recipie_url' => get_permalink(),
+                    'recipe_url' => $this->concat_params(get_permalink()),
                     'image_url' => get_the_post_thumbnail_url(get_the_ID(), 'full'),
+                    'category' => $this->get_categories(get_the_ID())
                 ];
 
                 foreach(API_CUSTOM_FIELDS as $fieldId):
-                    $recipie['meta_'.$fieldId] = get_post_meta(get_the_ID(), $fieldId, true);
+                    $recipe['meta_'.$fieldId] = get_post_meta(get_the_ID(), $fieldId, true);
                 endforeach;
 
-                $recipes[] = $recipie;
+                $recipes[] = $recipe;
             }
             wp_reset_postdata();
         }
@@ -138,6 +147,49 @@ class RecipesApiEndpoint
         $responseData['status'] = 200;
 
         return rest_ensure_response($responseData);
+    }
+
+    private function get_categories($postId)
+    {
+        $categories = wp_get_post_terms($postId, 'category', array('fields' => 'all'));
+
+        $category_list = [];
+        foreach ($categories as $category) {
+            $category_list[] = [
+                'name' => $category->name,
+                'url' => $this->concat_params(
+                    get_term_link($category)
+                ),
+            ];
+        }
+
+        return $category_list;
+
+    }
+    private function concat_params($url)
+    {
+        $data = $this->params;
+
+        $utmParams = [
+            'utm_source',
+            'utm_campaign',
+            'utm_medium',
+            'utm_term',
+            'utm_content'
+        ];
+    
+        $params = [];
+        foreach ($utmParams as $param) {
+            if (!empty($data[$param])) {
+                $params[] = $param . '=' . sanitize_text_field($data[$param]);
+            }
+        }
+    
+        if (!empty($params)) {
+            $url .= (parse_url($url, PHP_URL_QUERY) ? '&' : '?') . implode('&', $params);
+        }
+    
+        return $url;
     }
 
 
