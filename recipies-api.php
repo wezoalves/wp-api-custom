@@ -11,6 +11,11 @@ if (!defined('ABSPATH')) {
 }
 
 require_once plugin_dir_path(__FILE__) . 'src/RecipiesApiPlugin.php';
+require_once plugin_dir_path(__FILE__) . 'src/Admin/RecipiesApiAdmin.php';
+require_once plugin_dir_path(__FILE__) . 'src/CPT/RecipiesApiCPT.php';
+require_once plugin_dir_path(__FILE__) . 'src/API/RecipiesApiEndpoint.php';
+
+
 
 use RecipiesAPI\RecipiesApiPlugin;
 
