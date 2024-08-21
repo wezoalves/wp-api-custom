@@ -12,7 +12,7 @@ class RecipesApiAdmin
     public function registerAdminMenu()
     {
         add_menu_page(
-            'Gerenciar Sites Disponíveis', 
+            'Controle API Receitas', 
             'API Receitas', 
             'manage_options', 
             'recipes-api-sites', 
@@ -49,7 +49,7 @@ class RecipesApiAdmin
         $auth_desactive = $auth != 1 ? 'selected' : '';
         ?>
         <div class="wrap">
-            <h1>Gerenciar Sites Disponíveis</h1>
+            <h1>Controle API Receitas</h1>
             <form method="post" action="">
                 <?php settings_fields('recipes-api-settings'); ?>
                 <?php do_settings_sections('recipes-api-settings'); ?>

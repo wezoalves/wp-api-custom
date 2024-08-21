@@ -15,7 +15,7 @@ require_once plugin_dir_path(__FILE__) . 'src/Admin/RecipesApiAdmin.php';
 require_once plugin_dir_path(__FILE__) . 'src/CPT/RecipesApiCPT.php';
 require_once plugin_dir_path(__FILE__) . 'src/API/RecipesApiEndpoint.php';
 
-define('API_CUSTOM_CPTSLUG', 'recipes');
+define('API_CUSTOM_CPTSLUG', 'post');//recipes
 define('API_CUSTOM_FIELDS', ['yield', 'prep_time']);
 
 use RecipesAPI\RecipesApiPlugin;

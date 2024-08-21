@@ -54,6 +54,9 @@ class RecipesApiEndpoint
     {
         
         $limitFilter = isset($data['limit']) ? min($data['limit'], 100) : 10;
+        $limitFilter = intval($limitFilter);
+
+        $page = isset($data['page']) ? absint($data['page']) : 1;
         
         $siteFilter = isset($data['site']) ? sanitize_text_field($data['site']) : '';
         $sites = get_option('recipes_api_sites', []);
@@ -95,6 +98,7 @@ class RecipesApiEndpoint
         $args = array(
             'post_type' => API_CUSTOM_CPTSLUG,
             'posts_per_page' => $limitFilter,
+            'paged' => $page,
             'meta_query' => $metaQuery,
             'tax_query' => $taxQuery,
         );
@@ -125,6 +129,12 @@ class RecipesApiEndpoint
             wp_reset_postdata();
         }
         $responseData['data'] = $recipes;
+        $responseData['pagination'] = [
+            'total' => $query->found_posts,
+            'total_pages' => $query->max_num_pages,
+            'current_page' => $page,
+            'limit' => $limitFilter
+        ];
         $responseData['status'] = 200;
 
         return rest_ensure_response($responseData);
