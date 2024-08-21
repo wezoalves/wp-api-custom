@@ -1,5 +1,5 @@
 
-# Recipies API Plugin
+# Recipes API Plugin
 
 **Version:** 1.0.0  
 **Author:** Weslley Alves    
@@ -7,13 +7,13 @@
 
 ## Description
 
-The **Recipies API** plugin allows adding a custom meta box to the "Recipies" Custom Post Type (CPT) to select which sites the entries will be available on. Additionally, the plugin creates a REST API endpoint that returns the entries filtered based on the selected sites. Access to the endpoint is secured via WordPress application passwords.
+The **Recipes API** plugin allows adding a custom meta box to the "Recipes" Custom Post Type (CPT) to select which sites the entries will be available on. Additionally, the plugin creates a REST API endpoint that returns the entries filtered based on the selected sites. Access to the endpoint is secured via WordPress application passwords.
 
 ## Features
 
-- Adds a meta box to the "Recipies" CPT to select available sites.
+- Adds a meta box to the "Recipes" CPT to select available sites.
 - Creates an admin screen to manage the available sites.
-- REST API endpoint to list "Recipies" CPT entries filtered based on selected sites.
+- REST API endpoint to list "Recipes" CPT entries filtered based on selected sites.
 - Endpoint protection using WordPress application passwords.
 
 ## Requirements
@@ -31,11 +31,11 @@ The **Recipies API** plugin allows adding a custom meta box to the "Recipies" Cu
 ### 1. Managing Available Sites
 
 - In the WordPress admin menu, go to **Manage Sites**.
-- Add, edit, or remove the available sites. These sites are used to select which sites the "Recipies" CPT entries will be available on.
+- Add, edit, or remove the available sites. These sites are used to select which sites the "Recipes" CPT entries will be available on.
 
-### 2. Configuring the "Recipies" CPT
+### 2. Configuring the "Recipes" CPT
 
-- When creating or editing a "Recipies" post, you will see a meta box where you can select the sites where the entry will be available.
+- When creating or editing a "Recipes" post, you will see a meta box where you can select the sites where the entry will be available.
 - The sites available in the meta box are those configured in the "Manage Sites" screen.
 
 ### 3. Consuming the REST API
@@ -43,7 +43,7 @@ The **Recipies API** plugin allows adding a custom meta box to the "Recipies" Cu
 The API endpoint is available at:
 
 ```
-https://yoursite.com/apireceita/V1/recipies
+https://yoursite.com/apireceita/V1/recipes
 ```
 
 #### Parameters
@@ -53,7 +53,7 @@ https://yoursite.com/apireceita/V1/recipies
 Usage example:
 
 ```
-https://yoursite.com/apireceita/V1/recipies?sites=sitea.com
+https://yoursite.com/apireceita/V1/recipes?sites=sitea.com
 ```
 
 ### 4. Securing the Endpoint with Application Passwords
@@ -63,7 +63,7 @@ https://yoursite.com/apireceita/V1/recipies?sites=sitea.com
 **Example Request:**
 
 ```bash
-curl -X GET https://yoursite.com/apireceita/V1/recipies?sites=sitea.com \
+curl -X GET https://yoursite.com/apireceita/V1/recipes?sites=sitea.com \
 -H "Authorization: Basic base64_encoded_string"
 ```
 
