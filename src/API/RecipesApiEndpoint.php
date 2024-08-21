@@ -52,6 +52,9 @@ class RecipesApiEndpoint
 
     public function getRecipes($data)
     {
+        
+        $limitFilter = isset($data['limit']) ? min($data['limit'], 100) : 10;
+        
         $siteFilter = isset($data['site']) ? sanitize_text_field($data['site']) : '';
         $sites = get_option('recipes_api_sites', []);
 
@@ -91,7 +94,7 @@ class RecipesApiEndpoint
 
         $args = array(
             'post_type' => API_CUSTOM_CPTSLUG,
-            'posts_per_page' => -1,
+            'posts_per_page' => $limitFilter,
             'meta_query' => $metaQuery,
             'tax_query' => $taxQuery,
         );
