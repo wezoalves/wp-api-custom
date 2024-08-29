@@ -1,21 +1,20 @@
-
 # Recipes API Plugin
 
-**Version:** 1.0.0  
+**Version:** 1.0.1  
 **Author:** Weslley Alves  
 **License:** GPL-2.0-or-later
 
 ## Description
 
-The **Recipes API** plugin allows adding a custom meta box to the "Recipes" Custom Post Type (CPT) to select which sites the entries will be available on. Additionally, the plugin creates a REST API endpoint that returns the entries filtered based on the selected sites and categories. Access to the endpoint is secured via WordPress application passwords.
+The **Recipes API** plugin provides tools to manage and expose a custom "Recipes" Custom Post Type (CPT) via a REST API. The plugin adds custom meta boxes to the "Recipes" CPT, allowing you to specify which sites the entries will be available on. It also creates a REST API endpoint that returns the entries filtered based on selected sites, categories, and tags. The endpoint is protected via WordPress application passwords to ensure secure access.
 
 ## Features
 
 - Adds a meta box to the "Recipes" CPT to select available sites.
 - Creates an admin screen to manage the available sites.
-- REST API endpoint to list "Recipes" CPT entries filtered based on selected sites and categories.
+- REST API endpoint to list "Recipes" CPT entries filtered based on selected sites, categories, and tags.
 - Endpoint protection using WordPress application passwords.
-- Supports filtering by multiple categories with `AND` or `OR` relation.
+- Supports filtering by multiple categories and tags with `AND` or `OR` relations.
 - Supports pagination to control the number of results returned.
 
 ## Requirements
@@ -52,17 +51,19 @@ https://yoursite.com/api/v1/recipes
 
 - `site`: (optional) Filters the entries based on the selected site.
 - `categories`: (optional) Filters entries by multiple categories. Accepts a comma-separated list of category IDs or slugs.
-- `relation`: (optional) Defines the relation between categories, either `AND` or `OR`. The default is `AND`.
+- `tags`: (optional) Filters entries by multiple tags. Accepts a comma-separated list of tag IDs or slugs.
+- `relation`: (optional) Defines the relation between categories and tags, either `AND` or `OR`. The default is `AND`.
 - `page`: (optional) The page number to return. Defaults to 1.
 - `limit`: (optional) The number of items per page. Defaults to 10.
+- `post_type`: (optional) Specify a custom post type to filter results. Defaults to the "Recipes" CPT.
 
 Usage example:
 
 ```
-https://yoursite.com/api/v1/recipes?site=sitea.com&categories=1,2&relation=OR&page=2&limit=5
+https://yoursite.com/api/v1/recipes?site=sitea.com&categories=1,2&tags=breakfast,dinner&relation=OR&page=2&limit=5
 ```
 
-This example will return page 2 of the results from `sitea.com` that are in either category `1` or `2`, with 5 items per page.
+This example will return page 2 of the results from `sitea.com` that are in either category `1` or `2` and have the tags `breakfast` or `dinner`, with 5 items per page.
 
 ### 4. Securing the Endpoint with Application Passwords
 
@@ -93,6 +94,11 @@ The response includes the following pagination details:
 - `current_page`: The current page number.
 - `limit`: The number of items returned per page.
 
+## Changelog
+
+### 1.0.1
+- Added support for filtering recipes by tags.
+- Updated the API to allow filtering by a combination of categories and tags with `AND` or `OR` relations.
 
 ## Author
 

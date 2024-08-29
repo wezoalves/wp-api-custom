@@ -53,63 +53,93 @@ class RecipesApiEndpoint
 
     public function getRecipes($data)
     {
-
         $this->params = $data;
 
         $limitFilter = isset($data['limit']) ? min($data['limit'], 100) : 6;
         $limitFilter = intval($limitFilter);
 
+        $post_type = isset($data['post_type']) ? $data['post_type'] : null;
+        $post_type = post_type_exists($post_type) ? $post_type : API_CUSTOM_CPTSLUG; 
+
         $page = isset($data['page']) ? absint($data['page']) : 1;
-        
+
+
+        // Filter site
+
         $siteFilter = isset($data['site']) ? sanitize_text_field($data['site']) : '';
         $sites = get_option('recipes_api_sites', []);
 
-        // Verifica se o site passado no filtro existe na lista de sites disponíveis
+        // if site not registered
         if (!empty($siteFilter) && !in_array($siteFilter, $sites)) {
             return new \WP_Error('invalid_site', 'Site inválido.', array('status' => 400));
         }
 
-        // Converte o site para a meta key que foi usada ao salvar os dados
         $metaKey = '_site_available_' . sanitize_key($siteFilter);
-    
-        // Monta a meta_query para verificar se a key existe e o valor é "1"
         $metaQuery = [];
         if (!empty($siteFilter)) {
             $metaQuery[] = [
-                'key' => $metaKey,
-                'value' => '1',
-                'compare' => '='
+            'key' => $metaKey,
+            'value' => '1',
+            'compare' => '='
             ];
         }
 
-        // Filter categories
-        $categories = isset($data['categories']) ? explode(',', sanitize_text_field($data['categories'])) : [];
-        $relation = isset($data['relation']) && in_array(strtoupper($data['relation']), ['AND', 'OR']) ? strtoupper($data['relation']) : 'AND';
+        // End Filter site
 
-        // Filter field category -> by term_id or slug
-        $field = isset($data['field']) && in_array(strtolower($data['field']), ['term_id', 'slug']) ? strtolower($data['field']) : 'term_id';
+
+        // Config Query Category and Tag
 
         $taxQuery = [];
+        $field = isset($data['field']) && in_array(strtolower($data['field']), ['term_id', 'slug']) ? strtolower($data['field']) : 'term_id';
+
+        // End Config Query Category and Tag
+
+
+        // Filter Category
+
+        $categories = isset($data['categories']) ? explode(',', sanitize_text_field($data['categories'])) : [];
         if (!empty($categories)) {
-            $taxQuery = [
-            'relation' => $relation,
-            [
-                'taxonomy' => 'category',
-                'field' => $field,
-                'terms' => $categories,
-            ]
+            $taxQuery[] = [
+            'taxonomy' => 'category',
+            'field' => $field,
+            'terms' => $categories,
             ];
         }
 
-        $args = array(
-            'post_type' => API_CUSTOM_CPTSLUG,
+        // End Filter Category
+
+
+        // Filter Tag
+
+        $tags = isset($data['tags']) ? explode(',', sanitize_text_field($data['tags'])) : [];
+
+        if (!empty($tags)) {
+            $taxQuery[] = [
+            'taxonomy' => 'post_tag',
+            'field' => $field,
+            'terms' => $tags,
+            ];
+        }
+
+        // End Filter Tag
+
+
+        $relation = isset($data['relation']) && in_array(strtoupper($data['relation']), ['AND', 'OR']) ? strtoupper($data['relation']) : 'AND';
+        if (!empty($taxQuery)) {
+            $taxQuery['relation'] = $relation;
+        }
+
+        $taxQuery = !empty($taxQuery) ? $taxQuery : [];
+
+        $args = [
+            'post_type' => $post_type,
             'posts_per_page' => $limitFilter,
             'paged' => $page,
             'meta_query' => $metaQuery,
             'tax_query' => $taxQuery,
             'orderby' => 'date',
             'order' => 'DESC',
-        );
+        ];
 
         $responseData['query'] = $args;
 
@@ -121,12 +151,13 @@ class RecipesApiEndpoint
                 $query->the_post();
 
                 $recipe = [
-                    'id' => get_the_ID(),
-                    'title' => get_the_title(),
-                    'resume' => wp_strip_all_tags(get_the_excerpt()),
-                    'recipe_url' => $this->concat_params(get_permalink()),
-                    'image_url' => get_the_post_thumbnail_url(get_the_ID(), 'full'),
-                    'category' => $this->get_categories(get_the_ID())
+                'id' => get_the_ID(),
+                'title' => get_the_title(),
+                'resume' => wp_strip_all_tags(get_the_excerpt()),
+                'recipe_url' => $this->concat_params(get_permalink()),
+                'image_url' => get_the_post_thumbnail_url(get_the_ID(), 'full'),
+                'category' => $this->get_categories(get_the_ID()),
+                'tags' => $this->get_tags(get_the_ID()),
                 ];
 
                 foreach(API_CUSTOM_FIELDS as $fieldId):
@@ -139,15 +170,16 @@ class RecipesApiEndpoint
         }
         $responseData['data'] = $recipes;
         $responseData['pagination'] = [
-            'total' => $query->found_posts,
-            'total_pages' => $query->max_num_pages,
-            'current_page' => $page,
-            'limit' => $limitFilter
+        'total' => $query->found_posts,
+        'total_pages' => $query->max_num_pages,
+        'current_page' => $page,
+        'limit' => $limitFilter
         ];
         $responseData['status'] = 200;
 
         return rest_ensure_response($responseData);
     }
+
 
     private function get_categories($postId)
     {
@@ -166,6 +198,25 @@ class RecipesApiEndpoint
         return $category_list;
 
     }
+
+    private function get_tags($postId)
+    {
+        // Obtém as tags associadas ao post
+        $tags = wp_get_post_terms($postId, 'post_tag', array('fields' => 'all'));
+
+        $tag_list = [];
+        foreach ($tags as $tag) {
+            $tag_list[] = [
+            'name' => $tag->name,
+            'url' => $this->concat_params(
+                get_term_link($tag)
+            ),
+            ];
+        }
+
+        return $tag_list;
+    }
+
     private function concat_params($url)
     {
         $data = $this->params;
