@@ -3,7 +3,7 @@ namespace RecipesAPI\API;
 
 class RecipesApiEndpoint
 {
-    private \WP_REST_Request|null $params = null;
+    private $params = null;
     public function init()
     {
         add_action('rest_api_init', [$this, 'registerApiEndpoints']);
