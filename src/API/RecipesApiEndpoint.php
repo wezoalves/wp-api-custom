@@ -58,11 +58,27 @@ class RecipesApiEndpoint
         $limitFilter = isset($data['limit']) ? min($data['limit'], 100) : 6;
         $limitFilter = intval($limitFilter);
 
-        $post_type = isset($data['post_type']) ? $data['post_type'] : null;
-        $post_type = post_type_exists($post_type) ? $post_type : API_CUSTOM_CPTSLUG; 
 
         $page = isset($data['page']) ? absint($data['page']) : 1;
 
+
+        // Post type
+
+        $post_type = isset($data['post_type']) ? $data['post_type'] : API_CUSTOM_CPTSLUG;
+        $posttypes_enabled = get_option('recipes_api_cpt', []);
+        
+        // if post type not registered
+        if (!post_type_exists($post_type)) {
+            return new \WP_Error('invalid_posttype', 'post type invalid.', array('status' => 400));
+        }
+        
+        // if post type not enabled
+        if (!in_array($post_type, $posttypes_enabled)) {
+            return new \WP_Error('inactive_posttype', 'post type not enabled.', array('status' => 400));
+        }
+
+        // End Post type
+        
 
         // Filter site
 
@@ -71,7 +87,7 @@ class RecipesApiEndpoint
 
         // if site not registered
         if (!empty($siteFilter) && !in_array($siteFilter, $sites)) {
-            return new \WP_Error('invalid_site', 'Site inválido.', array('status' => 400));
+            return new \WP_Error('invalid_site', 'site invalid.', array('status' => 400));
         }
 
         $metaKey = '_site_available_' . sanitize_key($siteFilter);

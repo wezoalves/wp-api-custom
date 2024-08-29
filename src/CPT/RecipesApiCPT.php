@@ -12,14 +12,18 @@ class RecipesApiCPT
 
     public function addMetaBox()
     {
-        add_meta_box(
-            'ra_sites_meta_box', 
-            'Api Receitas', 
-            [$this, 'metaBoxCallback'], 
-            API_CUSTOM_CPTSLUG, 
-            'side', 
-            'low'
-        );
+        $selectedCpts = get_option('recipes_api_cpt', []);
+
+        foreach ($selectedCpts as $cpt) {
+            add_meta_box(
+                'ra_sites_meta_box', 
+                'Api', 
+                [$this, 'metaBoxCallback'], 
+                $cpt, 
+                'side', 
+                'low'
+            );
+        }
     }
 
     public function metaBoxCallback($post)
@@ -27,7 +31,6 @@ class RecipesApiCPT
         $sites = get_option('recipes_api_sites', []);
         $selectedSites = [];
 
-        // Verifica os metadados individuais de cada site
         foreach ($sites as $site) {
             if (get_post_meta($post->ID, '_site_available_' . sanitize_key($site), true)) {
                 $selectedSites[] = $site;
@@ -35,11 +38,11 @@ class RecipesApiCPT
         }
 
         if (empty($sites)) {
-            echo '<p>Nenhum site disponível. Por favor, adicione sites em "Api Receitas".</p>';
+            echo '<p>Nenhum site disponível. Por favor, adicione sites no menu principal "Api".</p>';
             return;
         }
 
-        echo '<p>Selecione os sites onde a Receita estará disponível:</p>';
+        echo '<p>Selecione os sites onde este conteúdo estará disponível:</p>';
 
         foreach ($sites as $site) {
             $checked = in_array($site, $selectedSites) ? 'checked' : '';
