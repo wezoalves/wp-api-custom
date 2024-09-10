@@ -52,18 +52,32 @@ class RecipesApiCPT
 
     public function saveMetaBoxData($postId)
     {
-        if (!isset($_POST['ra_selected_sites']) || !is_array($_POST['ra_selected_sites'])) {
+
+        // Certifique-se de que o post ID é válido
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
             return;
         }
 
-        $sites = get_option('recipes_api_sites', []);
-        foreach ($sites as $site) {
-            delete_post_meta($postId, '_site_available_' . sanitize_key($site));
+        // Verifica se o post está sendo salvo no contexto correto
+        if (!current_user_can('edit_post', $postId)) {
+            return;
         }
 
-        foreach ($_POST['ra_selected_sites'] as $selectedSite) {
-            update_post_meta($postId, '_site_available_' . sanitize_key($selectedSite), '1');
+        // Obtém todas as metas do post
+        $all_meta = get_post_meta($postId);
+
+        // Itera sobre todas as metas e remove aquelas que têm o prefixo '_site_available_'
+        foreach ($all_meta as $meta_key => $meta_value) {
+            if (strpos($meta_key, '_site_available_') === 0) {
+                delete_post_meta($postId, $meta_key);
+            }
         }
+
+        if (isset($_POST['ra_selected_sites']) && is_array($_POST['ra_selected_sites'])) {
+            foreach ($_POST['ra_selected_sites'] as $selectedSite) {
+                update_post_meta($postId, '_site_available_' . sanitize_key($selectedSite), '1');
+            }
+        } 
     }
 
     public function addCustomRewriteRules()

@@ -28,6 +28,23 @@ class RecipesApiAdmin
         register_setting('recipes-api-settings', 'recipes_api_cpt');
     }
 
+    public function registerMetaFields($site, $cpt_key)
+    {
+       
+        $meta_key = '_site_available_' . sanitize_key($site);
+
+        
+        register_post_meta(
+            $cpt_key, $meta_key, array(
+            'description' => 'Filter Site',
+            'show_in_rest' => true,
+            'single' => true,
+            'type' => 'string',
+            )
+        );
+       
+    }
+
     public function adminPageHtml()
     {
         if (!current_user_can('manage_options')) {
@@ -36,7 +53,16 @@ class RecipesApiAdmin
 
         if (isset($_POST['submit'])) {
             $sites = isset($_POST['recipes_api_sites']) ? array_filter(array_map('sanitize_text_field', $_POST['recipes_api_sites'])) : [];
+
+
             $cpts = isset($_POST['recipes_api_cpt']) ? array_map('sanitize_text_field', $_POST['recipes_api_cpt']) : [];
+
+
+            foreach ($cpts as $cpt_key) {
+                foreach ($sites as $site) {
+                    $this->registerMetaFields($site, $cpt_key);
+                }
+            }
 
             update_option('recipes_api_sites', empty($sites) ? null : $sites);
             update_option('recipes_api_cpt', $cpts);

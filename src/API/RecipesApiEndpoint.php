@@ -11,15 +11,66 @@ class RecipesApiEndpoint
 
     public function registerApiEndpoints()
     {
-        $args = [
-            'methods' => 'GET',
-            'callback' => [$this, 'getRecipes'],
-            'permission_callback' => [$this, 'authenticateRequest'], 
-        ];
 
         register_rest_route(
-            'ra/v1', '/recipes/', $args
+            'ra/v1', '/recipes/', [
+                'methods' => 'GET',
+                'callback' => [$this, 'getRecipes'],
+                'permission_callback' => [$this, 'authenticateRequest'], 
+            ]
         );
+
+        register_rest_route(
+            'ra/v1', '/update-meta', [
+            'methods' => 'POST',
+            'callback' => [$this, 'updateMetaValues'],
+            'permission_callback' => [$this, 'authenticateRequest'], 
+            'args' => [
+                'post_id' => [
+                    'required' => true,
+                    'validate_callback' => function ($param) {
+                        return is_numeric($param) && get_post($param);
+                    }
+                ],
+                'meta_key' => [
+                    'required' => true,
+                    'validate_callback' => 'sanitize_text_field'
+                ],
+                'meta_value' => [
+                    'required' => false,
+                    'sanitize_callback' => 'sanitize_text_field'
+                ]
+            ]
+            ]
+        );
+
+    }
+
+    public function updateMetaValues($data)
+    {
+        $post_id = intval($data['post_id']);
+
+        $meta_key = sanitize_text_field($data['meta_key']);
+
+        $meta_value = isset($data['meta_value']) ? sanitize_text_field($data['meta_value']) : null;
+
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            
+            if (!$meta_value) {
+                return new \WP_Error('missing_meta_value', 'Meta value is required for adding or updating.', array('status' => 400));
+            }
+
+            update_post_meta($post_id, $meta_key, $meta_value);
+
+            return rest_ensure_response(
+                [
+                'message' => 'Meta value updated successfully.',
+                'status' => 200
+                ]
+            );
+        }
+
+        return new \WP_Error('invalid_method', 'Invalid method.', array('status' => 405));
     }
   
     public function authenticateRequest()
@@ -94,9 +145,9 @@ class RecipesApiEndpoint
         $metaQuery = [];
         if (!empty($siteFilter)) {
             $metaQuery[] = [
-            'key' => $metaKey,
-            'value' => '1',
-            'compare' => '='
+                'key' => $metaKey,
+                'value' => '1',
+                'compare' => '='
             ];
         }
 
@@ -116,9 +167,9 @@ class RecipesApiEndpoint
         $categories = isset($data['categories']) ? explode(',', sanitize_text_field($data['categories'])) : [];
         if (!empty($categories)) {
             $taxQuery[] = [
-            'taxonomy' => 'category',
-            'field' => $field,
-            'terms' => $categories,
+                'taxonomy' => 'category',
+                'field' => $field,
+                'terms' => $categories,
             ];
         }
 
@@ -131,9 +182,9 @@ class RecipesApiEndpoint
 
         if (!empty($tags)) {
             $taxQuery[] = [
-            'taxonomy' => 'post_tag',
-            'field' => $field,
-            'terms' => $tags,
+                'taxonomy' => 'post_tag',
+                'field' => $field,
+                'terms' => $tags,
             ];
         }
 
@@ -167,13 +218,13 @@ class RecipesApiEndpoint
                 $query->the_post();
 
                 $recipe = [
-                'id' => get_the_ID(),
-                'title' => get_the_title(),
-                'resume' => wp_strip_all_tags(get_the_excerpt()),
-                'recipe_url' => $this->concat_params(get_permalink()),
-                'image_url' => get_the_post_thumbnail_url(get_the_ID(), 'full'),
-                'category' => $this->get_categories(get_the_ID()),
-                'tags' => $this->get_tags(get_the_ID()),
+                    'id' => get_the_ID(),
+                    'title' => get_the_title(),
+                    'resume' => wp_strip_all_tags(get_the_excerpt()),
+                    'recipe_url' => $this->concat_params(get_permalink()),
+                    'image_url' => get_the_post_thumbnail_url(get_the_ID(), 'full'),
+                    'category' => $this->get_categories(get_the_ID()),
+                    'tags' => $this->get_tags(get_the_ID()),
                 ];
 
                 foreach(API_CUSTOM_FIELDS as $fieldId):
@@ -186,10 +237,10 @@ class RecipesApiEndpoint
         }
         $responseData['data'] = $recipes;
         $responseData['pagination'] = [
-        'total' => $query->found_posts,
-        'total_pages' => $query->max_num_pages,
-        'current_page' => $page,
-        'limit' => $limitFilter
+            'total' => $query->found_posts,
+            'total_pages' => $query->max_num_pages,
+            'current_page' => $page,
+            'limit' => $limitFilter
         ];
         $responseData['status'] = 200;
 
